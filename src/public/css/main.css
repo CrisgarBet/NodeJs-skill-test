@@ -1,0 +1,31 @@
+.login {
+  background: #627d4d;
+  background: -moz-linear-gradient(left, #627d4d 0%, #1f3b08 100%);
+  background: -webkit-gradient(
+    left top,
+    right top,
+    color-stop(0%, #627d4d),
+    color-stop(100%, #1f3b08)
+  );
+  background: -webkit-linear-gradient(left, #627d4d 0%, #1f3b08 100%);
+  background: -o-linear-gradient(left, #627d4d 0%, #1f3b08 100%);
+  background: -ms-linear-gradient(left, #627d4d 0%, #1f3b08 100%);
+  background: linear-gradient(to right, #627d4d 0%, #1f3b08 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#627d4d', endColorstr='#1f3b08', GradientType=1 );
+}
+
+.signup {
+  background: #a4b357;
+  background: -moz-linear-gradient(left, #a4b357 0%, #75890c 100%);
+  background: -webkit-gradient(
+    left top,
+    right top,
+    color-stop(0%, #a4b357),
+    color-stop(100%, #75890c)
+  );
+  background: -webkit-linear-gradient(left, #a4b357 0%, #75890c 100%);
+  background: -o-linear-gradient(left, #a4b357 0%, #75890c 100%);
+  background: -ms-linear-gradient(left, #a4b357 0%, #75890c 100%);
+  background: linear-gradient(to right, #a4b357 0%, #75890c 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a4b357', endColorstr='#75890c', GradientType=1 );
+}
