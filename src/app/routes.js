@@ -1,5 +1,7 @@
 const fs = require("fs");
 const path = require("path");
+const jwt = require("jsonwebtoken");
+const jwtSecret = require("../config/jwtConfig");
 
 module.exports = (app, passport) => {
   app.get("/", (req, res) => {
@@ -20,6 +22,12 @@ module.exports = (app, passport) => {
       failureFlash: true
     })
   );
+
+  // logout
+  app.get("/logout", (req, res) => {
+    req.logout();
+    res.redirect("/");
+  });
 
   // register
   app.get("/signup", (req, res) => {

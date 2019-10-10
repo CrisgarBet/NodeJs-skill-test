@@ -29,3 +29,25 @@
   background: linear-gradient(to right, #a4b357 0%, #75890c 100%);
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a4b357', endColorstr='#75890c', GradientType=1 );
 }
+
+.profile {
+  background: #93cede;
+  background: -moz-linear-gradient(left, #93cede 0%, #75bdd1 41%, #49a5bf 100%);
+  background: -webkit-gradient(
+    left top,
+    right top,
+    color-stop(0%, #93cede),
+    color-stop(41%, #75bdd1),
+    color-stop(100%, #49a5bf)
+  );
+  background: -webkit-linear-gradient(
+    left,
+    #93cede 0%,
+    #75bdd1 41%,
+    #49a5bf 100%
+  );
+  background: -o-linear-gradient(left, #93cede 0%, #75bdd1 41%, #49a5bf 100%);
+  background: -ms-linear-gradient(left, #93cede 0%, #75bdd1 41%, #49a5bf 100%);
+  background: linear-gradient(to right, #93cede 0%, #75bdd1 41%, #49a5bf 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#93cede', endColorstr='#49a5bf', GradientType=1 );
+}
