@@ -17,7 +17,7 @@ module.exports = (app, passport) => {
     passport.authenticate("local-login", {
       successRedirect: "/profile",
       failureRedirect: "/login",
-      failureFlash: true 
+      failureFlash: true
     })
   );
 
@@ -31,13 +31,21 @@ module.exports = (app, passport) => {
     passport.authenticate("local-signup", {
       successRedirect: "/profile",
       failureRedirect: "/signup",
-      failureFlash: true 
+      failureFlash: true
     })
   );
 
-  app.get("/profile", (req, res) => {
+  app.get("/profile", isLoginOk, (req, res) => {
     res.render("profile", { user: req.user });
   });
+
+  function isLoginOk(req, res, next) {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+
+    res.redirect("/");
+  }
 
   // arrays
 
