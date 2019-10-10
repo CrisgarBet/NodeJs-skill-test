@@ -23,9 +23,3 @@ I worked in this project with the next technologies:
 - NodeJs.
 - Bootstrap and EJS templates.
 - MongoDB.
-  
-
-the server start with the command 
-```bash
-npm start
-```
