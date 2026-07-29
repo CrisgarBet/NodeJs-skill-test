@@ -1,59 +1,48 @@
-const express = require("express");
-const app = express();
+"use strict";
 
-const path = require("path");
 const mongoose = require("mongoose");
+const MongoStore = require("connect-mongo");
 const passport = require("passport");
-const flash = require("connect-flash");
-const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
-const session = require("express-session"); 
-const fs = require("fs");
-const { url } = require("./config/database.js");
+const { createApp } = require("./app");
+const { DEFAULT_MONGODB_URI } = require("./config/database");
 
-mongoose.connect(url, {
-  useMongoClient: true
-});
+const port = Number(process.env.PORT) || 3000;
+const mongoUrl = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
+const isProduction = process.env.NODE_ENV === "production";
+const sessionSecret = process.env.SESSION_SECRET || "development-only-change-me";
 
-require("./config/passport")(passport);
+if (isProduction && sessionSecret === "development-only-change-me") {
+  throw new Error("SESSION_SECRET es obligatorio en producción.");
+}
 
-// settings
-app.set("port", process.env.PORT || 3000);
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs");
+async function start() {
+  await mongoose.connect(mongoUrl, { serverSelectionTimeoutMS: 10_000 });
+  require("./config/passport")(passport);
 
-// middlewares
-app.use(
-  morgan(":date[iso] :remote-addr :method :url :status :res[content-length] - :response-time ms", {
-    stream: fs.createWriteStream(
-      path.join(__dirname, "public", "assets", "log.txt"),
-      { flags: "a" }
-    )
-  })
-);
-app.use(morgan(":date[iso] :remote-addr :method :url :status :res[content-length] - :response-time ms"));
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: false }));
-// required for passport
-app.use(
-  session({
-    secret: "pruebajaya",
-    resave: false,
-    saveUninitialized: false
-  })
-);
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(flash());
+  const sessionStore = MongoStore.create({
+    client: mongoose.connection.getClient(),
+    collectionName: "sessions",
+    ttl: 60 * 60 * 4,
+    touchAfter: 60
+  });
+  const app = createApp({ passport, sessionStore, sessionSecret, isProduction });
+  const server = app.listen(port, () => {
+    console.log(`Servidor disponible en http://localhost:${port}`);
+  });
 
-// routes
-require("./app/routes.js")(app, passport);
+  async function shutdown(signal) {
+    console.log(`${signal}: cerrando servidor...`);
+    server.close(async () => {
+      await mongoose.disconnect();
+      process.exit(0);
+    });
+  }
 
-// static files
-app.use(express.static(path.join(__dirname, "public")));
+  process.once("SIGINT", () => shutdown("SIGINT"));
+  process.once("SIGTERM", () => shutdown("SIGTERM"));
+}
 
-// start the server
-app.listen(app.get("port"), () => {
-  console.log("server on port ", app.get("port"));
+start().catch((error) => {
+  console.error("No fue posible iniciar la aplicación:", error.message);
+  process.exitCode = 1;
 });

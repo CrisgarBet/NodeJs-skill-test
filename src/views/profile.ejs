@@ -1,35 +1,28 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="es">
   <head>
-    <meta charset="utf-8" />
-    <title>Profile</title>
-    <%include partials/head%>
+    <%- include("partials/head", { title: "Perfil" }) %>
   </head>
-  <body class="profile">
-    <div class="container-fluid text-center">
-      <div class="row content">
-        <div class="col-sm-2 sidenav">
-          <div class="text-center">
-            <a class="btn btn-dark" href="/logout">Logout</a>
-          </div>
+  <body>
+    <main class="shell">
+      <nav class="topbar" aria-label="Navegación principal">
+        <a class="brand" href="/">Prueba Jaya</a>
+        <form action="/logout" method="post">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="button secondary" type="submit">Cerrar sesión</button>
+        </form>
+      </nav>
+
+      <section class="card">
+        <p class="eyebrow">Sesión activa</p>
+        <h1>Hola, <%= user.local.email %></h1>
+        <p class="lead">Desde aquí puedes ejecutar los tres modos de la prueba.</p>
+        <div class="endpoint-grid">
+          <a href="/asc"><span>Menor a mayor</span><code>/asc</code></a>
+          <a href="/des"><span>Mayor a menor</span><code>/des</code></a>
+          <a href="/mix"><span>Dirección alternada</span><code>/mix</code></a>
         </div>
-        <div class="col-sm-8 text-left">
-          <h1>Welcome</h1>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat
-            non proident, sunt in culpa qui officia deserunt mollit anim id est
-            laborum consectetur adipiscing elit, sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-            veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
-            ea commodo consequat.
-          </p>
-          <hr />
-          <h3>Test</h3>
-          <p>Lorem ipsum...</p>
-        </div>
-      </div>
-    </div>
+      </section>
+    </main>
+  </body>
 </html>

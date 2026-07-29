@@ -1,20 +1,36 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="es">
   <head>
-    <meta charset="utf-8" />
-    <title>Prueba Jaya</title>
-    <%include partials/head%>
+    <%- include("partials/head", { title: "Inicio" }) %>
   </head>
   <body>
-    <div class="container">
-      <div class="card text-center mt-5">
-        <div class="card-body">
-          <h1><span class="fa fa-lock"></span>Login</h1>
-          <a class="btn btn-light" href="/login">Login</a>
-          <hr />
-          <a class="btn btn-light" href="/signup">Signup</a>
+    <main class="shell">
+      <section class="hero card">
+        <p class="eyebrow">Node.js · Express · MongoDB</p>
+        <h1>Ordena colecciones numéricas de forma confiable</h1>
+        <p class="lead">
+          La aplicación lee los arreglos configurados, valida cada número y permite
+          ordenarlos de menor a mayor, de mayor a menor o alternando ambos criterios.
+        </p>
+        <div class="actions">
+          <% if (user) { %>
+            <a class="button primary" href="/profile">Ir a mi perfil</a>
+          <% } else { %>
+            <a class="button primary" href="/signup">Crear cuenta</a>
+            <a class="button secondary" href="/login">Iniciar sesión</a>
+          <% } %>
         </div>
-      </div>
-    </div>
+      </section>
+
+      <section class="card">
+        <h2>Probar la API</h2>
+        <p>Estas rutas conservan el contrato de la prueba original y responden con JSON.</p>
+        <div class="endpoint-grid">
+          <a href="/asc"><span>Ascendente</span><code>GET /asc</code></a>
+          <a href="/des"><span>Descendente</span><code>GET /des</code></a>
+          <a href="/mix"><span>Alternado</span><code>GET /mix</code></a>
+        </div>
+      </section>
+    </main>
   </body>
 </html>

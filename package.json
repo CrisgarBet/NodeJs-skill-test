@@ -1,31 +1,40 @@
 {
   "name": "prueba-jaya",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Aplicación Express con autenticación y ordenamiento de arreglos",
+  "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "check": "node --check src/server.js && node --check src/app.js && node --check src/app/routes.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "keywords": [
+    "express",
+    "mongoose",
+    "passport",
+    "sorting"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "app-root-path": "^2.2.1",
-    "bcrypt-nodejs": "0.0.3",
-    "body-parser": "^1.20.1",
+    "bcrypt": "^6.0.0",
     "connect-flash": "^0.1.1",
-    "cookie-parser": "^1.4.4",
-    "express": "^4.17.3",
-    "express-jwt": "^5.3.1",
-    "ejs": "^3.1.7",
-    "express-jwt": "^6.0.0",
-    "express-session": "^1.16.2",
-    "jsonwebtoken": "^9.0.0",
-    "mongoose": "^5.13.20",
-    "morgan": "^1.9.1",
-    "passport": "^0.6.0",
-    "passport-jwt": "^4.0.0",
+    "connect-mongo": "^6.0.0",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.6.1",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "mongoose": "^9.8.1",
+    "morgan": "^1.11.0",
+    "passport": "^0.7.0",
     "passport-local": "^1.0.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2"
   }
 }

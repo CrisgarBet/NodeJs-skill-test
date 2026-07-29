@@ -1,21 +1,38 @@
-const fs = require("fs");
-const path = require("path");
-const jwt = require("jsonwebtoken");
-const jwtSecret = require("../config/jwtConfig");
+"use strict";
 
-module.exports = (app, passport) => {
+const { rateLimit } = require("express-rate-limit");
+const { MODES, sortFile } = require("./array-sorter");
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: "Demasiados intentos. Intenta nuevamente en unos minutos."
+});
+
+function requireLogin(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  return res.redirect("/login");
+}
+
+module.exports = function registerRoutes({ app, passport, inputPath, outputPath }) {
   app.get("/", (req, res) => {
-    res.render("index");
+    res.render("index", { user: req.user });
   });
 
-  // Login
+  app.get("/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
 
   app.get("/login", (req, res) => {
-    res.render("login", { message: req.flash("loginMessage") });
+    if (req.isAuthenticated()) return res.redirect("/profile");
+    return res.render("login", { message: req.flash("loginMessage") });
   });
 
   app.post(
     "/login",
+    authLimiter,
     passport.authenticate("local-login", {
       successRedirect: "/profile",
       failureRedirect: "/login",
@@ -23,19 +40,14 @@ module.exports = (app, passport) => {
     })
   );
 
-  // logout
-  app.get("/logout", (req, res) => {
-    req.logout();
-    res.redirect("/");
-  });
-
-  // register
   app.get("/signup", (req, res) => {
-    res.render("signup", { message: req.flash("signupMessage") });
+    if (req.isAuthenticated()) return res.redirect("/profile");
+    return res.render("signup", { message: req.flash("signupMessage") });
   });
 
   app.post(
     "/signup",
+    authLimiter,
     passport.authenticate("local-signup", {
       successRedirect: "/profile",
       failureRedirect: "/signup",
@@ -43,85 +55,48 @@ module.exports = (app, passport) => {
     })
   );
 
-  app.get("/profile", isLoginOk, (req, res) => {
+  app.post("/logout", requireLogin, (req, res, next) => {
+    req.logout((error) => {
+      if (error) return next(error);
+      req.session.destroy((sessionError) => {
+        if (sessionError) return next(sessionError);
+        res.clearCookie("prueba_jaya.sid");
+        return res.redirect("/");
+      });
+    });
+  });
+
+  app.get("/profile", requireLogin, (req, res) => {
     res.render("profile", { user: req.user });
   });
 
-  function isLoginOk(req, res, next) {
-    if (req.isAuthenticated()) {
-      return next();
-    }
-
-    res.redirect("/");
-  }
-
-  // arrays
-
-  function sortedArray(type, req, res) {
-    const pathFile = path.join("src", "public", "assets", "original.txt");
-    fs.readFile(pathFile, function(err, data) {
-      const response = [];
-      data
-        .toString("utf-8")
-        .split(";")
-        .forEach((element, index) => {
-          const arrayUpdate = element
-            .trim()
-            .replace("[", "")
-            .replace("]", "")
-            .split(",");
-
-          switch (type) {
-            case "asc":
-              arrayUpdate.sort((a, b) => a - b);
-              break;
-
-            case "des":
-              arrayUpdate.sort((a, b) => b - a);
-              break;
-
-            case "mix":
-              if (index % 2 == 0) {
-                arrayUpdate.sort((a, b) => a - b);
-              } else {
-                arrayUpdate.sort((a, b) => b - a);
-              }
-              break;
-          }
-
-          response.push(arrayUpdate);
-        });
-
-      const pathWrite = path.join("src", "public", "assets", "sorted.txt");
-      fs.writeFile(
-        pathWrite,
-        response
-          .map(function(v) {
-            return v.join(", ");
-          })
-          .join("\n"),
-        function(err) {
-          if (err) {
-            return console.log(err);
-          }
-          return res.json(response);
-        }
-      );
-      if (err) {
-        console.error(err);
+  async function handleSort(req, res, next) {
+    try {
+      const mode = req.params.mode;
+      if (!MODES.has(mode)) {
+        const error = new Error("Modo de ordenamiento no válido.");
+        error.status = 400;
+        throw error;
       }
-    });
+      return res.json(await sortFile(mode, inputPath, outputPath));
+    } catch (error) {
+      return next(error);
+    }
   }
 
-  app.get("/asc", (req, res) => {
-    sortedArray("asc", req, res);
+  app.get("/api/sort/:mode", handleSort);
+  app.get("/asc", (req, res, next) => {
+    req.params.mode = "asc";
+    return handleSort(req, res, next);
   });
-
-  app.get("/des", (req, res) => {
-    sortedArray("des", req, res);
+  app.get("/des", (req, res, next) => {
+    req.params.mode = "des";
+    return handleSort(req, res, next);
   });
-
-  app.get("/mix", (req, res) => {
-    sortedArray("mix", req, res);
+  app.get("/mix", (req, res, next) => {
+    req.params.mode = "mix";
+    return handleSort(req, res, next);
   });
 };
+
+module.exports.requireLogin = requireLogin;

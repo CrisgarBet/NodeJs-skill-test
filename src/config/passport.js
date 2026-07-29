@@ -1,20 +1,23 @@
-const LocalStrategy = require("passport-local").Strategy;
-const JWTStrategy = require("passport-jwt").Strategy;
-const jwtSecret = require("./jwtConfig");
+"use strict";
+
+const { Strategy: LocalStrategy } = require("passport-local");
 const User = require("../app/models/user");
 
-module.exports = function(passport) {
-  passport.serializeUser(function(user, done) {
-    done(null, user.id);
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+module.exports = function configurePassport(passport) {
+  passport.serializeUser((user, done) => done(null, user.id));
+
+  passport.deserializeUser(async (id, done) => {
+    try {
+      done(null, await User.findById(id));
+    } catch (error) {
+      done(error);
+    }
   });
 
-  passport.deserializeUser(function(id, done) {
-    User.findById(id, function(err, user) {
-      done(err, user);
-    });
-  });
-
-  // Register
   passport.use(
     "local-signup",
     new LocalStrategy(
@@ -23,34 +26,41 @@ module.exports = function(passport) {
         passwordField: "password",
         passReqToCallback: true
       },
-      function(req, email, password, done) {
-        User.findOne({ "local.email": email }, function(err, user) {
-          if (err) {
-            return done(err);
+      async (req, rawEmail, password, done) => {
+        try {
+          const email = normalizeEmail(rawEmail);
+          if (!/^\S+@\S+\.\S+$/.test(email)) {
+            return done(null, false, req.flash("signupMessage", "Ingresa un correo válido."));
           }
-          if (user) {
+          if (
+            typeof password !== "string" ||
+            password.length < 8 ||
+            Buffer.byteLength(password, "utf8") > 72
+          ) {
             return done(
               null,
               false,
-              req.flash("signupMessage", "the email is already taken")
+              req.flash("signupMessage", "La contraseña debe tener entre 8 y 72 bytes.")
             );
-          } else {
-            var newUser = new User();
-            newUser.local.email = email;
-            newUser.local.password = newUser.generateHash(password);
-            newUser.save(function(err) {
-              if (err) {
-                throw err;
-              }
-              return done(null, newUser);
-            });
           }
-        });
+          if (await User.exists({ "local.email": email })) {
+            return done(null, false, req.flash("signupMessage", "El correo ya está registrado."));
+          }
+
+          const user = new User({ local: { email } });
+          await user.setPassword(password);
+          await user.save();
+          return done(null, user);
+        } catch (error) {
+          if (error?.code === 11000) {
+            return done(null, false, req.flash("signupMessage", "El correo ya está registrado."));
+          }
+          return done(error);
+        }
       }
     )
   );
 
-  // login
   passport.use(
     "local-login",
     new LocalStrategy(
@@ -59,44 +69,25 @@ module.exports = function(passport) {
         passwordField: "password",
         passReqToCallback: true
       },
-      function(req, email, password, done) {
-        User.findOne({ "local.email": email }, function(err, user) {
-          if (err) {
-            return done(err);
-          }
-          if (!user) {
+      async (req, rawEmail, password, done) => {
+        try {
+          const user = await User.findOne({ "local.email": normalizeEmail(rawEmail) }).select(
+            "+local.password"
+          );
+          if (!user || !(await user.validatePassword(password))) {
             return done(
               null,
               false,
-              req.flash("loginMessage", "No User found")
-            );
-          }
-          if (!user.validatePassword(password)) {
-            return done(
-              null,
-              false,
-              req.flash("loginMessage", "Wrong. password")
+              req.flash("loginMessage", "Correo o contraseña incorrectos.")
             );
           }
           return done(null, user);
-        });
-      }
-    )
-  );
-
-  passport.use(
-    new JWTStrategy(
-      {
-        jwtFromRequest: req => req.cookies.jwt,
-        secretOrKey: jwtSecret.secret
-      },
-      (jwtPayload, done) => {
-        if (Date.now() > jwtPayload.expires) {
-          return done("jwt expired");
+        } catch (error) {
+          return done(error);
         }
-
-        return done(null, jwtPayload);
       }
     )
   );
 };
+
+module.exports.normalizeEmail = normalizeEmail;
